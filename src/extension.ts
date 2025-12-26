@@ -3,8 +3,18 @@ import { GistService, Gist } from './gistService';
 
 let gistService: GistService;
 
+// Store gist metadata by document URI
+const gistMetadataMap = new Map<string, { gistId: string; fileName: string; description: string }>();
+
 export function activate(context: vscode.ExtensionContext) {
     gistService = new GistService();
+
+    // Clean up metadata when document is closed
+    context.subscriptions.push(
+        vscode.workspace.onDidCloseTextDocument(doc => {
+            gistMetadataMap.delete(doc.uri.toString());
+        })
+    );
 
     context.subscriptions.push(
         vscode.commands.registerCommand('gist-manager.list', listAndOpenGist),
@@ -75,15 +85,14 @@ async function openGistFile(gist: Gist, fileName: string): Promise<void> {
         language: getLanguageId(fileName)
     });
 
-    const editor = await vscode.window.showTextDocument(doc);
+    await vscode.window.showTextDocument(doc);
 
     // Store gist metadata for update command
-    const metadata = {
+    gistMetadataMap.set(doc.uri.toString(), {
         gistId: gist.id,
         fileName,
         description: gist.description || ''
-    };
-    (editor.document as any).__gistMetadata = metadata;
+    });
 }
 
 function getLanguageId(fileName: string): string | undefined {
@@ -213,7 +222,7 @@ async function updateGist(): Promise<void> {
             return;
         }
 
-        const metadata = (editor.document as any).__gistMetadata;
+        const metadata = gistMetadataMap.get(editor.document.uri.toString());
 
         if (metadata) {
             // Update the currently open Gist
