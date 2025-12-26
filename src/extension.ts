@@ -37,9 +37,9 @@ async function listAndOpenGist(): Promise<void> {
         }
 
         const items = gists.map(gist => ({
-            label: gist.description || Object.keys(gist.files)[0] || 'Untitled',
-            description: `${Object.keys(gist.files).length} file(s) - ${gist.public ? 'Public' : 'Secret'}`,
-            detail: Object.keys(gist.files).join(', '),
+            label: Object.keys(gist.files).join(', ') || 'Untitled',
+            description: gist.public ? 'Public' : 'Secret',
+            detail: gist.description || '',
             gist
         }));
 
@@ -317,9 +317,9 @@ async function deleteGist(): Promise<void> {
         }
 
         const items = gists.map(gist => ({
-            label: gist.description || Object.keys(gist.files)[0] || 'Untitled',
-            description: `${Object.keys(gist.files).length} file(s) - ${gist.public ? 'Public' : 'Secret'}`,
-            detail: Object.keys(gist.files).join(', '),
+            label: Object.keys(gist.files).join(', ') || 'Untitled',
+            description: gist.public ? 'Public' : 'Secret',
+            detail: gist.description || '',
             gist
         }));
 
