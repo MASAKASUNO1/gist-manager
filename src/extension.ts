@@ -77,8 +77,14 @@ async function openGist(gist: Gist): Promise<void> {
 }
 
 async function openGistFile(gist: Gist, fileName: string): Promise<void> {
-    const file = gist.files[fileName];
-    const content = file.content;
+    // Fetch full gist content (list API may not include full content)
+    const fullGist = await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Notification, title: 'Loading file...' },
+        () => gistService.getGist(gist.id)
+    );
+
+    const file = fullGist.files[fileName];
+    const content = file.content || '';
 
     const doc = await vscode.workspace.openTextDocument({
         content,
@@ -89,9 +95,9 @@ async function openGistFile(gist: Gist, fileName: string): Promise<void> {
 
     // Store gist metadata for update command
     gistMetadataMap.set(doc.uri.toString(), {
-        gistId: gist.id,
+        gistId: fullGist.id,
         fileName,
-        description: gist.description || ''
+        description: fullGist.description || ''
     });
 }
 
